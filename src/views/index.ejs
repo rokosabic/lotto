@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lotto</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
+      .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; max-width: 640px; }
+      h1 { margin-top: 0; }
+      .muted { color: #666; }
+      .row { display: flex; gap: 1rem; align-items: center; }
+      a.button { padding: 0.5rem 0.75rem; border: 1px solid #333; border-radius: 6px; text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Lotto</h1>
+      <p class="muted">Render-ready baseline app.</p>
+
+      <section>
+        <h3>Auth</h3>
+        <% if (isAuthenticated && user) { %>
+          <div class="row">
+            <div>Signed in as <strong><%= user.name || user.email %></strong></div>
+            <a class="button" href="/profile">Profile JSON</a>
+            <a class="button" href="/logout">Logout</a>
+          </div>
+        <% } else { %>
+          <div class="row">
+            <div>Not signed in.</div>
+            <a class="button" href="/login">Login</a>
+          </div>
+        <% } %>
+      </section>
+
+      <section>
+        <h3>Current round</h3>
+        <div>Tickets: <%= ticketsInCurrentRound ?? '-' %></div>
+        <div>Drawn numbers: <%= drawnNumbers ? drawnNumbers.join(', ') : '-' %></div>
+        <% if (isPaymentsActive) { %>
+          <a href="/tickets/new">Pay ticket</a>
+        <% } %>
+      </section>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,42 @@
+{
+  "name": "lotto",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm run clean && tsc && npm run copy-views",
+    "clean": "shx rm -rf dist",
+    "copy-views": "shx cp -r src/views dist",
+    "start": "node dist/server.js",
+    "migrate": "node dist/db/migrate.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rokosabic/lotto.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rokosabic/lotto/issues"
+  },
+  "homepage": "https://github.com/rokosabic/lotto#readme",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-oauth2-jwt-bearer": "^1.6.0",
+    "express-openid-connect": "^2.19.2",
+    "pg": "^8.16.3",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.7.0",
+    "@types/pg": "^8.15.5",
+    "@types/qrcode": "^1.5.5",
+    "shx": "^0.3.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
