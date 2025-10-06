@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pay ticket</title>
+    <style>
+      :root { --fg:#111; --muted:#666; --line:#e6e6e6; --bg:#fafafa; --btn:#111; --btnfg:#fff; }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; color: var(--fg); background: var(--bg); }
+      .container { max-width: 720px; margin: 0 auto; padding: 24px; }
+      .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+      .muted { color: var(--muted); }
+      label { display: block; margin: 10px 0 6px; }
+      input[type="text"] { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; }
+      .help { font-size: 12px; color: var(--muted); margin-top: 4px; }
+      .row { display: flex; gap: 12px; align-items: center; }
+      .actions { margin-top: 16px; }
+      button { padding: 10px 14px; border: 1px solid var(--btn); background: var(--btn); color: var(--btnfg); border-radius: 8px; cursor: pointer; }
+      a { color: #111; text-decoration: none; }
+      .error { background: #fff5f5; border: 1px solid #ffd6d6; color: #8a1f1f; padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; }
+      .success { background: #f5fff7; border: 1px solid #d6ffdd; color: #1f8a3a; padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <a href="/">← Home</a>
+      <h2>Pay a ticket</h2>
+      <div class="card">
+        <% if (typeof message !== 'undefined' && message) { %>
+          <div class="success"><%= message %></div>
+        <% } %>
+        <% if (typeof error !== 'undefined' && error) { %>
+          <div class="error"><%= error %></div>
+        <% } %>
+        <form method="post" action="/tickets">
+          <label for="nationalId">National ID (max 20 chars)</label>
+          <input id="nationalId" name="nationalId" maxlength="20" required />
+          <div class="help">Passport or ID number. Stored with the ticket.</div>
+
+          <label for="numbers">Numbers</label>
+          <input id="numbers" name="numbers" placeholder="e.g. 1,2,3,4,5,6" required />
+          <div class="help">Enter 6–10 unique numbers in range 1–45, separated by commas.</div>
+
+          <div class="actions row">
+            <button type="submit">Pay</button>
+            <a href="/" class="muted">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>

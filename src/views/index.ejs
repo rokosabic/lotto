@@ -5,43 +5,94 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Lotto</title>
     <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
-      .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; max-width: 640px; }
-      h1 { margin-top: 0; }
-      .muted { color: #666; }
-      .row { display: flex; gap: 1rem; align-items: center; }
-      a.button { padding: 0.5rem 0.75rem; border: 1px solid #333; border-radius: 6px; text-decoration: none; }
+      :root { --fg:#111; --muted:#666; --line:#e6e6e6; --bg:#fafafa; --btn:#111; --btnfg:#fff; }
+      * { box-sizing: border-box; }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; color: var(--fg); background: var(--bg); }
+      .container { max-width: 820px; margin: 0 auto; padding: 24px; }
+      header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+      h1 { font-size: 22px; margin: 0; }
+      .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-top: 12px; }
+      .muted { color: var(--muted); }
+      .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+      .stat { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 12px 0; border-top: 1px dashed var(--line); }
+      .stat:first-child { border-top: 0; }
+      a.button { padding: 8px 12px; border: 1px solid var(--btn); border-radius: 8px; text-decoration: none; color: var(--btn); background: #fff; }
+      a.button.primary { background: var(--btn); color: var(--btnfg); }
+      .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; border: 1px solid var(--line); font-size: 12px; }
+      .numbers { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+      .list { list-style: none; padding: 0; margin: 0; }
+      .list li { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+      .list li:first-child { border-top: 0; }
+      .chip { font-size: 12px; padding: 2px 6px; border: 1px solid var(--line); border-radius: 6px; }
     </style>
   </head>
   <body>
-    <div class="card">
-      <h1>Lotto</h1>
-      <p class="muted">Render-ready baseline app.</p>
-
-      <section>
-        <h3>Auth</h3>
-        <% if (isAuthenticated && user) { %>
-          <div class="row">
-            <div>Signed in as <strong><%= user.name || user.email %></strong></div>
-            <a class="button" href="/profile">Profile JSON</a>
+    <div class="container">
+      <header>
+        <h1>LOTTO</h1>
+        <div class="row">
+          <% if (isAuthenticated && user) { %>
+            <span class="muted">Signed in as <strong><%= user.name || user.email %></strong></span>
+            <a class="button" href="/profile">Profile</a>
             <a class="button" href="/logout">Logout</a>
-          </div>
-        <% } else { %>
-          <div class="row">
-            <div>Not signed in.</div>
-            <a class="button" href="/login">Login</a>
-          </div>
-        <% } %>
-      </section>
+          <% } else { %>
+            <a class="button primary" href="/login">Login</a>
+          <% } %>
+        </div>
+      </header>
 
-      <section>
-        <h3>Current round</h3>
-        <div>Tickets: <%= ticketsInCurrentRound ?? '-' %></div>
-        <div>Drawn numbers: <%= drawnNumbers ? drawnNumbers.join(', ') : '-' %></div>
-        <% if (isPaymentsActive) { %>
-          <a href="/tickets/new">Pay ticket</a>
-        <% } %>
-      </section>
+      <div class="card">
+        <div class="row" style="justify-content: space-between;">
+          <div class="row">
+            <div class="muted">Current round</div>
+            <% if (isPaymentsActive) { %>
+              <span class="badge">Payments: Active</span>
+            <% } else { %>
+              <span class="badge">Payments: Closed</span>
+            <% } %>
+          </div>
+          <div class="row">
+            <% if (isPaymentsActive && isAuthenticated) { %>
+              <a class="button primary" href="/tickets/new">Pay ticket</a>
+            <% } %>
+          </div>
+        </div>
+        <div class="stat">
+          <div class="muted">Tickets in this round</div>
+          <div><strong><%= ticketsInCurrentRound ?? '-' %></strong></div>
+        </div>
+        <div class="stat">
+          <div class="muted">Drawn numbers</div>
+          <div class="numbers"><%= drawnNumbers ? drawnNumbers.join(', ') : '-' %></div>
+        </div>
+      </div>
+
+      <% if (isAuthenticated && myTickets && myTickets.length > 0) { %>
+        <div class="card">
+          <div class="row" style="justify-content: space-between;">
+            <h3 style="margin:0;">Your tickets in this round</h3>
+            <span class="chip"><%= myTickets.length %></span>
+          </div>
+          <ul class="list">
+            <% myTickets.forEach(t => { %>
+              <li>
+                <span class="numbers"><%= t.numbers.join(', ') %></span>
+                <a class="button" href="/ticket/<%= t.id %>">Open</a>
+              </li>
+            <% }) %>
+          </ul>
+        </div>
+      <% } %>
+
+      <div class="card">
+        <div class="muted">How it works</div>
+        <ol>
+          <li>Login.</li>
+          <li>If payments are active, pay a ticket (enter ID and 6–10 numbers 1–45).</li>
+          <li>Save the QR image; it opens your ticket page.</li>
+          <li>After the round closes and results are stored, check winners.</li>
+        </ol>
+      </div>
     </div>
   </body>
 </html>
