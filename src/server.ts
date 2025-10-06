@@ -12,7 +12,6 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// View engine setup
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -20,7 +19,6 @@ const externalUrl = process.env.RENDER_EXTERNAL_URL;
 const port = externalUrl && process.env.PORT ? parseInt(process.env.PORT, 10) : 4080;
 const baseURL = externalUrl || `http://localhost:${port}`;
 
-// Auth0 browser session (OIDC) for users
 const authConfig = {
   authRequired: false,
   auth0Logout: true,
@@ -31,7 +29,6 @@ const authConfig = {
 };
 app.use(auth(authConfig));
 
-// Optional Auth0 M2M JWT protection for admin endpoints
 const audience = process.env.AUTH0_AUDIENCE;
 const issuer = process.env.AUTH0_DOMAIN ? `https://${process.env.AUTH0_DOMAIN}` : undefined;
 let apiJwt: ReturnType<typeof jwtAuth> | null = null;
@@ -40,28 +37,36 @@ if (audience && issuer) {
 }
 
 app.get('/', async (req, res) => {
-  // Use latest round as current (active or closed)
   const currentRound = await pool.query('SELECT id, is_active, drawn_numbers FROM rounds ORDER BY id DESC LIMIT 1');
   let ticketsCount: number | null = null;
   let drawnNumbers: number[] | null = null;
   let isPaymentsActive = false;
-  let myTickets: Array<{ id: string; numbers: number[] }> = [];
+  let myTickets: Array<{ id: string; numbers: number[]; isWinner?: boolean | null }> = [];
   if (currentRound.rows.length > 0) {
     const r = currentRound.rows[0];
     isPaymentsActive = !!r.is_active;
     if (!r.is_active && r.drawn_numbers && r.drawn_numbers.length > 0) {
-      drawnNumbers = r.drawn_numbers;
+      drawnNumbers = r.drawn_numbers as number[];
     } else {
       drawnNumbers = null;
     }
     const c = await pool.query('SELECT COUNT(*)::int AS c FROM tickets WHERE round_id = $1', [r.id]);
     ticketsCount = c.rows[0].c as number;
 
-    // If user logged in, fetch their tickets in this round
     const sub = (req as any).oidc?.user?.sub as string | undefined;
     if (sub) {
       const mine = await pool.query('SELECT id, numbers FROM tickets WHERE round_id = $1 AND user_sub = $2 ORDER BY created_at DESC LIMIT 20', [r.id, sub]);
       myTickets = mine.rows.map((row: any) => ({ id: row.id as string, numbers: row.numbers as number[] }));
+      if (Array.isArray(drawnNumbers)) {
+        const d = drawnNumbers as number[];
+        const drawnSet = new Set<number>(d);
+        myTickets = myTickets.map(t => ({
+          ...t,
+          isWinner: t.numbers.length === d.length && t.numbers.every(n => drawnSet.has(n))
+        }));
+      } else {
+        myTickets = myTickets.map(t => ({ ...t, isWinner: null }));
+      }
     }
   }
 
@@ -75,12 +80,10 @@ app.get('/', async (req, res) => {
   });
 });
 
-// Protected profile route shows the OIDC user profile
 app.get('/profile', requiresAuth(), (req, res) => {
   res.json((req as any).oidc.user);
 });
 
-// Ticket purchase form
 app.get('/tickets/new', requiresAuth(), async (req, res) => {
   const active = await pool.query('SELECT id FROM rounds WHERE is_active = true LIMIT 1');
   if (active.rows.length === 0) {
@@ -89,7 +92,6 @@ app.get('/tickets/new', requiresAuth(), async (req, res) => {
   res.render('tickets_new', { message: null, error: null });
 });
 
-// Create ticket: supports form-urlencoded and JSON
 app.post('/tickets', requiresAuth(), async (req, res) => {
   const nationalId = (req.body.nationalId as string | undefined)?.trim();
   const numbersField = (req.body.numbers as string | undefined)?.trim();
@@ -151,23 +153,27 @@ app.post('/tickets', requiresAuth(), async (req, res) => {
 </body></html>`);
 });
 
-// Public ticket page
 app.get('/ticket/:id', async (req, res) => {
   const { id } = req.params;
   const t = await pool.query('SELECT t.id, t.national_id, t.numbers, r.drawn_numbers FROM tickets t JOIN rounds r ON r.id = t.round_id WHERE t.id = $1', [id]);
   if (t.rows.length === 0) return res.status(404).send('Not found');
   const row = t.rows[0];
+  let isWinner: boolean | null = null;
+  if (row.drawn_numbers && row.drawn_numbers.length > 0) {
+    const drawnSet = new Set<number>(row.drawn_numbers as number[]);
+    isWinner = (row.numbers as number[]).length === (row.drawn_numbers as number[]).length && (row.numbers as number[]).every((n: number) => drawnSet.has(n));
+  }
   res.render('ticket', {
     ticket: {
       id: row.id,
       nationalId: row.national_id,
       numbers: row.numbers,
       drawnNumbers: row.drawn_numbers || null,
+      isWinner,
     }
   });
 });
 
-// Admin endpoints (M2M JWT required) only if configured
 if (apiJwt) {
   app.post('/new-round', apiJwt, requiredScopes('rounds'), async (_req, res) => {
     const active = await pool.query('SELECT id FROM rounds WHERE is_active = true LIMIT 1');

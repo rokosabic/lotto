@@ -12,6 +12,7 @@
       .muted { color: var(--muted); }
       .numbers { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
       a { color: #111; }
+      .chip { font-size: 12px; padding: 2px 6px; border: 1px solid var(--line); border-radius: 6px; }
     </style>
   </head>
   <body>
@@ -21,7 +22,15 @@
       <div class="card">
         <p><strong>National ID:</strong> <%= ticket.nationalId %></p>
         <p><strong>Numbers:</strong> <span class="numbers"><%= ticket.numbers.join(', ') %></span></p>
-        <p><strong>Drawn numbers:</strong> <span class="numbers"><%= ticket.drawnNumbers ? ticket.drawnNumbers.join(', ') : '-' %></span></p>
+        <p><strong>Drawn numbers:</strong> <span class="numbers"><%= ticket.drawnNumbers ? ticket.drawnNumbers.join(', ') : '-' %></span>
+        <% if (typeof ticket.isWinner !== 'undefined' && ticket.isWinner !== null) { %>
+          <% if (ticket.isWinner) { %>
+            <span class="chip" style="border-color:#b7e4c7;color:#1b4332;background:#d8f3dc;">Winner</span>
+          <% } else { %>
+            <span class="chip" style="border-color:#ffc9c9;color:#842029;background:#ffe3e3;">Not a match</span>
+          <% } %>
+        <% } %>
+        </p>
       </div>
     </div>
   </body>

@@ -77,6 +77,13 @@
             <% myTickets.forEach(t => { %>
               <li>
                 <span class="numbers"><%= t.numbers.join(', ') %></span>
+                <% if (typeof t.isWinner !== 'undefined' && t.isWinner !== null) { %>
+                  <% if (t.isWinner) { %>
+                    <span class="chip" style="border-color:#b7e4c7;color:#1b4332;background:#d8f3dc;">Winner</span>
+                  <% } else { %>
+                    <span class="chip" style="border-color:#ffc9c9;color:#842029;background:#ffe3e3;">Not a match</span>
+                  <% } %>
+                <% } %>
                 <a class="button" href="/ticket/<%= t.id %>">Open</a>
               </li>
             <% }) %>
